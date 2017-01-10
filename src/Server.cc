@@ -118,6 +118,10 @@ void Server::go() {
   wait();
 
   wait(1000);
+  queryProduct();
+  wait();
+
+  wait(1000);
   queryInstrument();
   wait();
 
@@ -155,6 +159,20 @@ void Server::queryExchange() {
   json::addMember<const std::string&>(&v_queryExchange, "exchange", "", &doc);
 
   json::addMember<const json::Value&>(&doc, "queryExchange", v_queryExchange);
+
+  push_service_->sendMsg(json::toString(doc));
+}
+
+void Server::queryProduct() {
+  QATAR_TRACE <<"Server::queryProduct()";
+
+  json::Document doc;
+
+  json::Value v_queryProduct;
+  json::addMember<const std::string&>(&v_queryProduct, "product_id", "", &doc);
+  json::addMember<const std::string&>(&v_queryProduct, "product_class", "1", &doc);
+
+  json::addMember<const json::Value&>(&doc, "queryProduct", v_queryProduct);
 
   push_service_->sendMsg(json::toString(doc));
 }

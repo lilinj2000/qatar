@@ -32,6 +32,8 @@ protected:
   
   void queryExchange();
 
+  void queryProduct();
+
   void queryInstrument();
 
   void queryInvestor();
