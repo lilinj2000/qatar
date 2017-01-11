@@ -5,6 +5,7 @@
 #define QATAR_SERVER_HH
 
 #include <string>
+#include <set>
 #include "Config.hh"
 #include "json/json.hh"
 #include "cppdb/frontend.h"
@@ -35,6 +36,16 @@ protected:
   void queryProduct();
 
   void queryInstrument();
+
+  void fetchInstrus();
+
+  void queryExchangeMarginRate();
+
+  void queryExchangeMarginRateAdjust();
+
+  void queryInstruMarginRate();
+
+  void queryInstruCommissionRate();
 
   void queryInvestor();
 
@@ -67,6 +78,10 @@ protected:
   std::unique_ptr<zod::PushService> push_service_;
 
   std::unique_ptr<soil::STimer> cond_;
+
+  std::set<std::string> instrus_;
+  
+  std::set<std::string> prod_instrus_;  // one instru each product
 };
 
 };  // namespace qatar

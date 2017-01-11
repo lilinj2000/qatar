@@ -125,6 +125,24 @@ void Server::go() {
   queryInstrument();
   wait();
 
+  fetchInstrus();
+
+  wait(1000);
+  queryExchangeMarginRate();
+  wait();
+
+  // wait(1000);
+  // queryExchangeMarginRateAdjust();
+  // wait();
+
+  wait(1000);
+  queryInstruMarginRate();
+  wait();
+
+  wait(1000);
+  queryInstruCommissionRate();
+  wait();
+
   wait(1000);
   queryInvestor();
   wait();
@@ -191,6 +209,121 @@ void Server::queryInstrument() {
   json::addMember<const json::Value&>(&doc, "queryInstrument", v_queryInstrument);
 
   push_service_->sendMsg(json::toString(doc));
+}
+
+void Server::fetchInstrus() {
+  QATAR_TRACE <<"Server::fetchInstrus()";
+
+  try {
+    std::string sql = "SELECT DISTINCT InstrumentID FROM Instrument";
+    QATAR_DEBUG <<sql;
+
+    cppdb::result res = (*db_) <<sql;
+
+    while(res.next()) {
+      std::string instru;
+      res >> instru;
+      instrus_.insert(instru);
+    }
+  } catch (std::exception const &e) {
+    QATAR_ERROR << "ERROR: " << e.what() << std::endl;
+  }
+
+  std::set<std::string> prods;
+  for (auto instru : instrus_) {
+    std::string prod;
+    boost::regex re_prod("^(\\D+)\\d+$");
+    boost::smatch mat;
+    if (boost::regex_match(instru, mat, re_prod)) {
+      prod = mat[1];
+    }
+
+    if (prods.count(prod) > 0) {
+      continue;
+    }
+    prods.insert(prod);
+
+    prod_instrus_.insert(instru);
+  }
+}
+
+void Server::queryExchangeMarginRate() {
+  QATAR_TRACE <<"Server::queryExchangeMarginRate()";
+
+  for (auto instru : instrus_) {
+    json::Document doc;
+    
+    json::Value v_queryExchangeMarginRate;
+    json::addMember<const std::string&>(&v_queryExchangeMarginRate, "instru", instru, &doc);
+    json::addMember<const std::string&>(&v_queryExchangeMarginRate, "hedge_flag", "1", &doc);
+
+    json::addMember<const json::Value&>(&doc, "queryExchangeMarginRate", v_queryExchangeMarginRate);
+
+    wait(2000);
+    push_service_->sendMsg(json::toString(doc));
+    wait();
+  }
+
+  notify();
+}
+
+void Server::queryExchangeMarginRateAdjust() {
+  QATAR_TRACE <<"Server::queryExchangeMarginRateAdjust()";
+
+  for (auto instru : instrus_) {
+    json::Document doc;
+    
+    json::Value v_queryExchangeMarginRateAdjust;
+    json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "instru", instru, &doc);
+    json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "hedge_flag", "1", &doc);
+
+    json::addMember<const json::Value&>(&doc, "queryExchangeMarginRateAdjust", v_queryExchangeMarginRateAdjust);
+
+    wait(2000);
+    push_service_->sendMsg(json::toString(doc));
+    wait();
+  }
+
+  notify();
+}
+
+void Server::queryInstruMarginRate() {
+  QATAR_TRACE <<"Server::queryInstruMarginRate()";
+
+  for (auto instru : instrus_) {
+    json::Document doc;
+    
+    json::Value v_queryInstruMarginRate;
+    json::addMember<const std::string&>(&v_queryInstruMarginRate, "instru", instru, &doc);
+    json::addMember<const std::string&>(&v_queryInstruMarginRate, "hedge_flag", "1", &doc);
+
+    json::addMember<const json::Value&>(&doc, "queryInstruMarginRate", v_queryInstruMarginRate);
+
+    wait(2000);
+    push_service_->sendMsg(json::toString(doc));
+    wait();
+  }
+
+  notify();
+}
+
+void Server::queryInstruCommissionRate() {
+  QATAR_TRACE <<"Server::queryInstruCommissionRate()";
+
+  for (auto instru : prod_instrus_) {
+    json::Document doc;
+    
+    json::Value v_queryInstruCommissionRate;
+    json::addMember<const std::string&>(&v_queryInstruCommissionRate, "instru", instru, &doc);
+
+    json::addMember<const json::Value&>(&doc, "queryInstruCommissionRate", v_queryInstruCommissionRate);
+
+    wait(2000);
+    push_service_->sendMsg(json::toString(doc));
+    wait();
+  }
+
+  notify();
 }
 
 void Server::queryInvestor() {
