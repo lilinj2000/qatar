@@ -131,9 +131,9 @@ void Server::go() {
   queryExchangeMarginRate();
   wait();
 
-  // wait(1000);
-  // queryExchangeMarginRateAdjust();
-  // wait();
+  wait(1000);
+  queryExchangeMarginRateAdjust();
+  wait();
 
   wait(1000);
   queryInstruMarginRate();
@@ -141,7 +141,6 @@ void Server::go() {
 
   wait(1000);
   queryInstruCommissionRate();
-  wait();
 
   wait(1000);
   queryInvestor();
@@ -250,61 +249,43 @@ void Server::fetchInstrus() {
 void Server::queryExchangeMarginRate() {
   QATAR_TRACE <<"Server::queryExchangeMarginRate()";
 
-  for (auto instru : instrus_) {
-    json::Document doc;
+  json::Document doc;
     
-    json::Value v_queryExchangeMarginRate;
-    json::addMember<const std::string&>(&v_queryExchangeMarginRate, "instru", instru, &doc);
-    json::addMember<const std::string&>(&v_queryExchangeMarginRate, "hedge_flag", "1", &doc);
+  json::Value v_queryExchangeMarginRate;
+  json::addMember<const std::string&>(&v_queryExchangeMarginRate, "instru", "", &doc);
+  json::addMember<const std::string&>(&v_queryExchangeMarginRate, "hedge_flag", "1", &doc);
 
-    json::addMember<const json::Value&>(&doc, "queryExchangeMarginRate", v_queryExchangeMarginRate);
+  json::addMember<const json::Value&>(&doc, "queryExchangeMarginRate", v_queryExchangeMarginRate);
 
-    wait(2000);
-    push_service_->sendMsg(json::toString(doc));
-    wait();
-  }
-
-  notify();
+  push_service_->sendMsg(json::toString(doc));
 }
 
 void Server::queryExchangeMarginRateAdjust() {
   QATAR_TRACE <<"Server::queryExchangeMarginRateAdjust()";
 
-  for (auto instru : instrus_) {
-    json::Document doc;
+  json::Document doc;
     
-    json::Value v_queryExchangeMarginRateAdjust;
-    json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "instru", instru, &doc);
-    json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "hedge_flag", "1", &doc);
+  json::Value v_queryExchangeMarginRateAdjust;
+  json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "instru", "", &doc);
+  json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "hedge_flag", "1", &doc);
 
-    json::addMember<const json::Value&>(&doc, "queryExchangeMarginRateAdjust", v_queryExchangeMarginRateAdjust);
+  json::addMember<const json::Value&>(&doc, "queryExchangeMarginRateAdjust", v_queryExchangeMarginRateAdjust);
 
-    wait(2000);
-    push_service_->sendMsg(json::toString(doc));
-    wait();
-  }
-
-  notify();
+  push_service_->sendMsg(json::toString(doc));
 }
 
 void Server::queryInstruMarginRate() {
   QATAR_TRACE <<"Server::queryInstruMarginRate()";
 
-  for (auto instru : instrus_) {
-    json::Document doc;
+  json::Document doc;
     
-    json::Value v_queryInstruMarginRate;
-    json::addMember<const std::string&>(&v_queryInstruMarginRate, "instru", instru, &doc);
-    json::addMember<const std::string&>(&v_queryInstruMarginRate, "hedge_flag", "1", &doc);
+  json::Value v_queryInstruMarginRate;
+  json::addMember<const std::string&>(&v_queryInstruMarginRate, "instru", "", &doc);
+  json::addMember<const std::string&>(&v_queryInstruMarginRate, "hedge_flag", "1", &doc);
 
-    json::addMember<const json::Value&>(&doc, "queryInstruMarginRate", v_queryInstruMarginRate);
+  json::addMember<const json::Value&>(&doc, "queryInstruMarginRate", v_queryInstruMarginRate);
 
-    wait(2000);
-    push_service_->sendMsg(json::toString(doc));
-    wait();
-  }
-
-  notify();
+  push_service_->sendMsg(json::toString(doc));
 }
 
 void Server::queryInstruCommissionRate() {
@@ -322,8 +303,6 @@ void Server::queryInstruCommissionRate() {
     push_service_->sendMsg(json::toString(doc));
     wait();
   }
-
-  notify();
 }
 
 void Server::queryInvestor() {
