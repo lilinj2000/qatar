@@ -2,91 +2,86 @@
 // All rights reserved.
 
 #include "Server.hh"
-#include "Log.hh"
+#include "soil/Log.hh"
 #include "boost/regex.hpp"
 
 namespace qatar {
 
-Server::Server(int argc, char* argv[]) {
-  QATAR_TRACE <<"Server::Server()";
+Server::Server(
+    const rapidjson::Document& doc) :
+    trader_service_(nullptr) {
+  SOIL_FUNC_TRACE;
 
   cond_.reset(soil::STimer::create());
+  options_.reset(new Options(doc));
 
-  config_.reset(new Config(argc, argv));
+  msg_queue_.reset(new soil::MsgQueue<std::string, Server>(this));
 
-  db_.reset(new cppdb::session(config_->options()->connection_string));
+  db_.reset(new cppdb::session(
+      options_->dbconn_str));
 
-  subject::Options options {
-    config_->options()->filter,
-        config_->options()->sub_addr
-        };
-
-  subject_service_.reset(subject::Service::createService(options, this));
-
-  push_service_.reset(zod::PushService::create(config_->options()->push_addr));
+  trader_service_ = cata::TraderService::create(
+      doc,
+      this);
 
   go();
 }
 
 Server::~Server() {
-  QATAR_TRACE <<"Server::~Server()";
+  SOIL_FUNC_TRACE;
 }
 
-void Server::onMessage(const std::string& msg) {
-  QATAR_TRACE <<"Server::onMessage()";
+void Server::msgCallback(
+    const std::string* msg) {
+  SOIL_FUNC_TRACE;
+  // SOIL_DEBUG_IF_PRINT(msg);
 
-  QATAR_DEBUG <<msg;
-  json::Document doc;
-  json::fromString(msg, &doc);
+  std::string escape_msg = soil::json::escape_string(*msg);
+  rapidjson::Document doc;
+  if (doc.Parse(escape_msg).HasParseError()) {
+    SOIL_DEBUG_PRINT(soil::json::get_parse_error(doc, escape_msg));
+    return;
+  }
 
   auto itr = doc.MemberBegin();
   std::string key = itr->name.GetString();
-  json::Value& data = doc[key.data()];
 
-  // OnRspQryInvestor
-  boost::regex re_qry("^OnRspQry(.*)$");
+  boost::regex re_field("^CThostFtdc(.*)Field$");
   boost::smatch mat;
-  if (boost::regex_match(key, mat, re_qry)) {
+  if (boost::regex_match(key, mat, re_field)) {
     std::string t_name = mat[1];
+    rapidjson::Value& f_data = doc[key];
+        
+    std::string create_sql;
+    std::string insert_sql;
+    sqlString(t_name, f_data, create_sql, insert_sql);
 
-    boost::regex re_field("^CThostFtdc(.*)Field$");
-    for (auto itr = data.MemberBegin();
-         itr != data.MemberEnd(); ++itr) {
-      boost::smatch mat;
-      std::string key = itr->name.GetString();
-      if (boost::regex_match(key, mat, re_field)) {
-        json::Value& f_data = data[key.data()];
+    SOIL_DEBUG_PRINT(create_sql);
+    SOIL_DEBUG_PRINT(insert_sql);
 
-        std::string create_sql;
-        std::string insert_sql;
-        sqlString(t_name, f_data, create_sql, insert_sql);
-        // QATAR_DEBUG <<"create sql: " <<create_sql;
-        // QATAR_DEBUG <<"insert sql: " <<insert_sql;
-
-        try {
-          (*db_) <<create_sql <<cppdb::exec;
-          (*db_) <<insert_sql <<cppdb::exec;
-        } catch (std::exception const &e) {
-          QATAR_ERROR <<e.what();
-        }
-      }
-    }
-
-    if (data["is_last"].GetBool()) {
-      notify();
+    try {
+      (*db_) <<create_sql <<cppdb::exec;
+      (*db_) <<insert_sql <<cppdb::exec;
+    } catch (std::exception const &e) {
+      SOIL_ERROR("db error: {}", e.what());
     }
   }
 }
 
-void Server::sqlString(const std::string& name,
-                       json::Value& data,
-                       std::string& create_sql,
-                       std::string& insert_sql) {
-  QATAR_TRACE <<"Server::sqlString()";
+void Server::sqlString(
+    const std::string& t_name,
+    rapidjson::Value& data,
+    std::string& create_sql,
+    std::string& insert_sql) {
+  SOIL_FUNC_TRACE;
 
-  create_sql = "CREATE TABLE IF NOT EXISTS " + name + " (";
+  create_sql = "CREATE TABLE IF NOT EXISTS "
+      + t_name
+      + " (";
 
-  insert_sql = "INSERT INTO " + name + " VALUES(";
+  insert_sql = "INSERT INTO "
+      + t_name
+      + " VALUES(";
 
   bool first = true;
   for (auto itr = data.MemberBegin();
@@ -111,284 +106,114 @@ void Server::sqlString(const std::string& name,
 }
 
 void Server::go() {
-  QATAR_TRACE <<"Server::go()";
+  SOIL_FUNC_TRACE;
 
   wait(1000);
-  queryExchange();
+  trader_service_->queryExchange("");
   wait();
 
   wait(1000);
-  queryProduct();
+  trader_service_->queryProduct("");
   wait();
 
   wait(1000);
-  queryInstrument();
+  trader_service_->queryInstrument(
+      "",
+      "",
+      "",
+      "");
   wait();
 
-  fetchInstrus();
+  // fetchInstrus();
 
   wait(1000);
-  queryExchangeMarginRate();
-  wait();
-
-  wait(1000);
-  queryExchangeMarginRateAdjust();
-  wait();
-
-  wait(1000);
-  queryInstruMarginRate();
+  trader_service_->queryExchangeMarginRate("");
   wait();
 
   wait(1000);
-  queryInstruCommissionRate();
-
-  wait(1000);
-  queryInvestor();
+  trader_service_->queryExchangeMarginRateAdjust("");
   wait();
 
   wait(1000);
-  queryAccount();
+  trader_service_->queryInstruMarginRate("");
   wait();
 
   wait(1000);
-  queryTradingCode();
+  trader_service_->queryInstruCommissionRate("");
   wait();
 
   wait(1000);
-  queryOrder();
+  trader_service_->queryInvestor();
   wait();
 
   wait(1000);
-  queryTrade();
+  trader_service_->queryAccount("");
   wait();
 
   wait(1000);
-  queryPosition();
+  trader_service_->queryTradingCode("");
   wait();
+
+  wait(1000);
+  trader_service_->queryOrder(
+      "",
+      "",
+      "",
+      "",
+      "");
+  wait();
+
+  wait(1000);
+  trader_service_->queryTrade(
+      "",
+      "",
+      "",
+      "",
+      "");
+  wait();
+
+  wait(1000);
+  trader_service_->queryPosition("");
+  wait();
+
+  wait(10*60000);
 }
 
-void Server::queryExchange() {
-  QATAR_TRACE <<"Server::queryExchange()";
+// void Server::fetchInstrus() {
+//   SOIL_FUNC_TRACE;
+
+//   try {
+//     std::string sql = "SELECT DISTINCT InstrumentID FROM Instrument";
+//     QATAR_DEBUG <<sql;
+
+//     cppdb::result res = (*db_) <<sql;
+
+//     while(res.next()) {
+//       std::string instru;
+//       res >> instru;
+//       instrus_.insert(instru);
+//     }
+//   } catch (std::exception const &e) {
+//     QATAR_ERROR << "ERROR: " << e.what() << std::endl;
+//   }
+
+//   std::set<std::string> prods;
+//   for (auto instru : instrus_) {
+//     std::string prod;
+//     boost::regex re_prod("^(\\D+)\\d+$");
+//     boost::smatch mat;
+//     if (boost::regex_match(instru, mat, re_prod)) {
+//       prod = mat[1];
+//     }
+
+//     if (prods.count(prod) > 0) {
+//       continue;
+//     }
+//     prods.insert(prod);
+
+//     prod_instrus_.insert(instru);
+//   }
+// }
 
-  json::Document doc;
-
-  json::Value v_queryExchange;
-  json::addMember<const std::string&>(&v_queryExchange, "exchange", "", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryExchange", v_queryExchange);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryProduct() {
-  QATAR_TRACE <<"Server::queryProduct()";
-
-  json::Document doc;
-
-  json::Value v_queryProduct;
-  json::addMember<const std::string&>(&v_queryProduct, "product_id", "", &doc);
-  json::addMember<const std::string&>(&v_queryProduct, "product_class", "1", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryProduct", v_queryProduct);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryInstrument() {
-  QATAR_TRACE <<"Server::queryInstrument()";
-
-  json::Document doc;
-
-  json::Value v_queryInstrument;
-  json::addMember<const std::string&>(&v_queryInstrument, "instru", "", &doc);
-  json::addMember<const std::string&>(&v_queryInstrument, "exchange", "", &doc);
-  json::addMember<const std::string&>(&v_queryInstrument, "exchange_instru_id", "", &doc);
-  json::addMember<const std::string&>(&v_queryInstrument, "product_id", "", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryInstrument", v_queryInstrument);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::fetchInstrus() {
-  QATAR_TRACE <<"Server::fetchInstrus()";
-
-  try {
-    std::string sql = "SELECT DISTINCT InstrumentID FROM Instrument";
-    QATAR_DEBUG <<sql;
-
-    cppdb::result res = (*db_) <<sql;
-
-    while(res.next()) {
-      std::string instru;
-      res >> instru;
-      instrus_.insert(instru);
-    }
-  } catch (std::exception const &e) {
-    QATAR_ERROR << "ERROR: " << e.what() << std::endl;
-  }
-
-  std::set<std::string> prods;
-  for (auto instru : instrus_) {
-    std::string prod;
-    boost::regex re_prod("^(\\D+)\\d+$");
-    boost::smatch mat;
-    if (boost::regex_match(instru, mat, re_prod)) {
-      prod = mat[1];
-    }
-
-    if (prods.count(prod) > 0) {
-      continue;
-    }
-    prods.insert(prod);
-
-    prod_instrus_.insert(instru);
-  }
-}
-
-void Server::queryExchangeMarginRate() {
-  QATAR_TRACE <<"Server::queryExchangeMarginRate()";
-
-  json::Document doc;
-    
-  json::Value v_queryExchangeMarginRate;
-  json::addMember<const std::string&>(&v_queryExchangeMarginRate, "instru", "", &doc);
-  json::addMember<const std::string&>(&v_queryExchangeMarginRate, "hedge_flag", "1", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryExchangeMarginRate", v_queryExchangeMarginRate);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryExchangeMarginRateAdjust() {
-  QATAR_TRACE <<"Server::queryExchangeMarginRateAdjust()";
-
-  json::Document doc;
-    
-  json::Value v_queryExchangeMarginRateAdjust;
-  json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "instru", "", &doc);
-  json::addMember<const std::string&>(&v_queryExchangeMarginRateAdjust, "hedge_flag", "1", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryExchangeMarginRateAdjust", v_queryExchangeMarginRateAdjust);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryInstruMarginRate() {
-  QATAR_TRACE <<"Server::queryInstruMarginRate()";
-
-  json::Document doc;
-    
-  json::Value v_queryInstruMarginRate;
-  json::addMember<const std::string&>(&v_queryInstruMarginRate, "instru", "", &doc);
-  json::addMember<const std::string&>(&v_queryInstruMarginRate, "hedge_flag", "1", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryInstruMarginRate", v_queryInstruMarginRate);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryInstruCommissionRate() {
-  QATAR_TRACE <<"Server::queryInstruCommissionRate()";
-
-  for (auto instru : prod_instrus_) {
-    json::Document doc;
-    
-    json::Value v_queryInstruCommissionRate;
-    json::addMember<const std::string&>(&v_queryInstruCommissionRate, "instru", instru, &doc);
-
-    json::addMember<const json::Value&>(&doc, "queryInstruCommissionRate", v_queryInstruCommissionRate);
-
-    wait(2000);
-    push_service_->sendMsg(json::toString(doc));
-    wait();
-  }
-}
-
-void Server::queryInvestor() {
-  QATAR_TRACE <<"Server::queryInvestor()";
-
-  json::Document doc;
-
-  json::Value v_queryInvestor;
-  json::addMember<const json::Value&>(&doc, "queryInvestor", v_queryInvestor);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryAccount() {
-  QATAR_TRACE <<"Server::queryAccount()";
-
-  json::Document doc;
-
-  json::Value v_queryAccount;
-  json::addMember<const std::string&>(&v_queryAccount, "currency", "", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryAccount", v_queryAccount);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryTradingCode() {
-  QATAR_TRACE <<"Server::queryTradingCode()";
-
-  json::Document doc;
-
-  json::Value v_queryTradingCode;
-  json::addMember<const std::string&>(&v_queryTradingCode, "exchange", "", &doc);
-  json::addMember<const std::string&>(&v_queryTradingCode, "client_id", "", &doc);
-  json::addMember<const std::string&>(&v_queryTradingCode, "client_id_type", "1", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryTradingCode", v_queryTradingCode);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryOrder() {
-  QATAR_TRACE <<"Server::queryOrder()";
-
-  json::Document doc;
-
-  json::Value v_queryOrder;
-  json::addMember<const std::string&>(&v_queryOrder, "instru", "", &doc);
-  json::addMember<const std::string&>(&v_queryOrder, "exchange", "", &doc);
-  json::addMember<const std::string&>(&v_queryOrder, "order_sys_id", "", &doc);
-  json::addMember<const std::string&>(&v_queryOrder, "start_time", "", &doc);
-  json::addMember<const std::string&>(&v_queryOrder, "stop_time", "", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryOrder", v_queryOrder);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryTrade() {
-  QATAR_TRACE <<"Server::queryTrade()";
-
-  json::Document doc;
-
-  json::Value v_queryTrade;
-  json::addMember<const std::string&>(&v_queryTrade, "instru", "", &doc);
-  json::addMember<const std::string&>(&v_queryTrade, "exchange", "", &doc);
-  json::addMember<const std::string&>(&v_queryTrade, "trade_id", "", &doc);
-  json::addMember<const std::string&>(&v_queryTrade, "start_time", "", &doc);
-  json::addMember<const std::string&>(&v_queryTrade, "stop_time", "", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryTrade", v_queryTrade);
-
-  push_service_->sendMsg(json::toString(doc));
-}
-
-void Server::queryPosition() {
-  QATAR_TRACE <<"Server::queryPosition()";
-
-  json::Document doc;
-
-  json::Value v_queryPosition;
-  json::addMember<const std::string&>(&v_queryPosition, "instru", "", &doc);
-
-  json::addMember<const json::Value&>(&doc, "queryPosition", v_queryPosition);
-
-  push_service_->sendMsg(json::toString(doc));
-}
 
 };  // namespace qatar

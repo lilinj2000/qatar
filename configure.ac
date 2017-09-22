@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.63])
 AC_INIT(qatar, 0.1, lilinj2000@gmail.com)
 AC_CONFIG_SRCDIR([])
 #AC_CONFIG_HEADERS([config.h])
@@ -33,8 +33,9 @@ AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
-home_3rd=~/3rd
-home_libs=~/libs
+node=`uname -n`
+home_3rd=~/3rd/${node}
+home_libs=~/libs/${node}
 
 dnl boost lib
 AC_ARG_WITH([boost],
@@ -45,14 +46,10 @@ AC_ARG_WITH([boost],
 AC_SUBST([BOOST_HOME])
 
 BOOST_CPPFLAGS="-I$BOOST_HOME/include -DBOOST_ALL_DYN_LINK"
-BOOST_LIBADD="$BOOST_HOME/lib/libboost_log_setup.so \
-              $BOOST_HOME/lib/libboost_log.so \
+BOOST_LIBADD=" \
 	      $BOOST_HOME/lib/libboost_filesystem.so \
-  	      $BOOST_HOME/lib/libboost_program_options.so \
 	      $BOOST_HOME/lib/libboost_regex.so \
 	      $BOOST_HOME/lib/libboost_thread.so \
-	      $BOOST_HOME/lib/libboost_chrono.so \
-	      $BOOST_HOME/lib/libboost_date_time.so \
 	      $BOOST_HOME/lib/libboost_system.so"
 AC_SUBST(BOOST_CPPFLAGS)
 AC_SUBST(BOOST_LIBADD)
@@ -66,8 +63,34 @@ AC_ARG_WITH([rapidjson],
     [RAPIDJSON_HOME="$RAPIDJSON_HOME"])
 AC_SUBST([RAPIDJSON_HOME])
 
-RAPIDJSON_CPPFLAGS="-I$RAPIDJSON_HOME/include"
+RAPIDJSON_CPPFLAGS="-I$RAPIDJSON_HOME/include -DRAPIDJSON_HAS_STDSTRING"
 AC_SUBST(RAPIDJSON_CPPFLAGS)
+
+dnl fmt lib
+FMT_HOME=$home_3rd/fmt
+AC_ARG_WITH([fmt], 
+    [AS_HELP_STRING([--with-fmt],
+        [home path of the fmt, defaults to $FMT_HOME])],
+    [FMT_HOME="$withval"],
+    [FMT_HOME="$FMT_HOME"])
+AC_SUBST([FMT_HOME])
+
+FMT_CPPFLAGS="-I$FMT_HOME/include"
+FMT_LIBADD="-L$FMT_HOME/lib -lfmt"
+AC_SUBST(FMT_CPPFLAGS)
+AC_SUBST(FMT_LIBADD)
+
+dnl spdlog lib
+SPDLOG_HOME=$home_3rd/spdlog
+AC_ARG_WITH([spdlog], 
+    [AS_HELP_STRING([--with-spdlog],
+        [home path of the spdlog, defaults to $SPDLOG_HOME])],
+    [SPDLOG_HOME="$withval"],
+    [SPDLOG_HOME="$SPDLOG_HOME"])
+AC_SUBST([SPDLOG_HOME])
+
+SPDLOG_CPPFLAGS="-I$SPDLOG_HOME/include -DSPDLOG_FMT_EXTERNAL"
+AC_SUBST(SPDLOG_CPPFLAGS)
 
 dnl cppdb
 CPPDB_HOME=$home_3rd/cppdb
@@ -96,46 +119,18 @@ SOIL_LIBADD="$SOIL_HOME/lib/libsoil.la"
 AC_SUBST(SOIL_CPPFLAGS)
 AC_SUBST(SOIL_LIBADD)
 
-dnl json lib
-AC_ARG_WITH([json],
-    [AS_HELP_STRING([--with-json],
-        [home path of the json, defaults to $home_libs/json])],
-    [JSON_HOME="$withval"],
-    [JSON_HOME="$home_libs/json"])
-AC_SUBST([JSON_HOME])
+dnl cata lib
+AC_ARG_WITH([cata],
+    [AS_HELP_STRING([--with-cata],
+        [home path of the cata, defaults to $home_libs/cata])],
+    [CATA_HOME="$withval"],
+    [CATA_HOME="$home_libs/cata"])
+AC_SUBST([CATA_HOME])
 
-JSON_CPPFLAGS="-I$JSON_HOME/include"
-JSON_LIBADD="$JSON_HOME/lib/libjson.la"
-AC_SUBST(JSON_CPPFLAGS)
-AC_SUBST(JSON_LIBADD)
-
-dnl subject lib
-SUBJECT_HOME=$home_libs/subject
-AC_ARG_WITH([subject],
-    [AS_HELP_STRING([--with-subject],
-        [home path of the subject, defaults to $SUBJECT_HOME])],
-    [SOIL_HOME="$withval"],
-    [SOIL_HOME="$SUBJECT_HOME"])
-AC_SUBST([SUBJECT_HOME])
-
-SUBJECT_CPPFLAGS="-I$SUBJECT_HOME/include"
-SUBJECT_LIBADD="$SUBJECT_HOME/lib/libsubject.la"
-AC_SUBST(SUBJECT_CPPFLAGS)
-AC_SUBST(SUBJECT_LIBADD)
-
-dnl zod lib
-ZOD_HOME=$home_libs/zod
-AC_ARG_WITH([zod], 
-    [AS_HELP_STRING([--with-zod],
-        [home path of the zod, defaults to $ZOD_HOME])],
-    [ZOD_HOME="$withval"],
-    [ZOD_HOME="$ZOD_HOME"])
-AC_SUBST([ZOD_HOME])
-
-ZOD_CPPFLAGS="-I$ZOD_HOME/include"
-ZOD_LIBADD="$ZOD_HOME/lib/libzod.la"
-AC_SUBST(ZOD_CPPFLAGS)
-AC_SUBST(ZOD_LIBADD)
+CATA_CPPFLAGS="-I$CATA_HOME/include"
+CATA_LIBADD="$CATA_HOME/lib/libcata_trader.la"
+AC_SUBST(CATA_CPPFLAGS)
+AC_SUBST(CATA_LIBADD)
 
 
 AC_OUTPUT([
