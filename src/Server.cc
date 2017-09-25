@@ -124,8 +124,6 @@ void Server::go() {
       "");
   wait();
 
-  // fetchInstrus();
-
   wait(1000);
   trader_service_->queryExchangeMarginRate("");
   wait();
@@ -176,42 +174,5 @@ void Server::go() {
   trader_service_->queryPosition("");
   wait();
 }
-
-// void Server::fetchInstrus() {
-//   SOIL_FUNC_TRACE;
-
-//   try {
-//     std::string sql = "SELECT DISTINCT InstrumentID FROM Instrument";
-//     QATAR_DEBUG <<sql;
-
-//     cppdb::result res = (*db_) <<sql;
-
-//     while(res.next()) {
-//       std::string instru;
-//       res >> instru;
-//       instrus_.insert(instru);
-//     }
-//   } catch (std::exception const &e) {
-//     QATAR_ERROR << "ERROR: " << e.what() << std::endl;
-//   }
-
-//   std::set<std::string> prods;
-//   for (auto instru : instrus_) {
-//     std::string prod;
-//     boost::regex re_prod("^(\\D+)\\d+$");
-//     boost::smatch mat;
-//     if (boost::regex_match(instru, mat, re_prod)) {
-//       prod = mat[1];
-//     }
-
-//     if (prods.count(prod) > 0) {
-//       continue;
-//     }
-//     prods.insert(prod);
-
-//     prod_instrus_.insert(instru);
-//   }
-// }
-
 
 };  // namespace qatar
