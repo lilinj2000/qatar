@@ -667,6 +667,8 @@ CATA_HOME
 SOIL_LIBADD
 SOIL_CPPFLAGS
 SOIL_HOME
+READERWRITERQUEUE_CPPFLAGS
+READERWRITERQUEUE_HOME
 CPPDB_LIBADD
 CPPDB_CPPFLAGS
 CPPDB_HOME
@@ -814,6 +816,7 @@ with_rapidjson
 with_fmt
 with_spdlog
 with_cppdb
+with_readerwriterqueue
 with_soil
 with_cata
 '
@@ -1482,6 +1485,9 @@ Optional Packages:
   --with-fmt              home path of the fmt, defaults to $FMT_HOME
   --with-spdlog           home path of the spdlog, defaults to $SPDLOG_HOME
   --with-cppdb            home path of the cppdb, defaults to $CPPDB_HOME
+  --with-readerwriterqueue 
+                          home path of the readerwriterqueue, defaults to
+                          $READERWRITERQUEUE_HOME
   --with-soil             home path of the soil, defaults to $home_libs/soil
   --with-cata             home path of the cata, defaults to $home_libs/cata
 
@@ -16266,7 +16272,6 @@ BOOST_CPPFLAGS="-I$BOOST_HOME/include -DBOOST_ALL_DYN_LINK"
 BOOST_LIBADD=" \
 	      $BOOST_HOME/lib/libboost_filesystem.so \
 	      $BOOST_HOME/lib/libboost_regex.so \
-	      $BOOST_HOME/lib/libboost_thread.so \
 	      $BOOST_HOME/lib/libboost_system.so"
 
 
@@ -16329,6 +16334,20 @@ fi
 CPPDB_CPPFLAGS="-I$CPPDB_HOME/include"
 CPPDB_LIBADD="-L$CPPDB_HOME/lib -lcppdb"
 
+
+
+READERWRITERQUEUE_HOME=$home_3rd/readerwriterqueue
+
+@%:@ Check whether --with-readerwriterqueue was given.
+if test "${with_readerwriterqueue+set}" = set; then
+  withval=$with_readerwriterqueue; READERWRITERQUEUE_HOME="$withval"
+else
+  READERWRITERQUEUE_HOME="$READERWRITERQUEUE_HOME"
+fi
+
+
+
+READERWRITERQUEUE_CPPFLAGS="-I$READERWRITERQUEUE_HOME/include"
 
 
 
@@ -18842,10 +18861,4 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { $as_echo "$as_me:$LINENO: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-
-
-
-
-
-
 

@@ -16,6 +16,7 @@ qatar_CPPFLAGS = -I$(top_srcdir) \
 		$(RAPIDJSON_CPPFLAGS) \
 		$(FMT_CPPFLAGS) \
 		$(SPDLOG_CPPFLAGS) \
+		$(READERWRITERQUEUE_CPPFLAGS) \
 		$(CATA_CPPFLAGS)
 
 qatar_LDADD = \
@@ -25,7 +26,7 @@ qatar_LDADD = \
 	$(CPPDB_LIBADD) \
 	$(CATA_LIBADD)
 
-qatar_LDFLAGS = $(LIBADD_DL) -Wl,--no-as-needed -pthread
+qatar_LDFLAGS = $(LIBADD_DL) -Wl,--no-as-needed -pthread -lrt
 
 # header files
 noinst_HEADERS = \

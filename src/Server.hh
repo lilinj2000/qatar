@@ -7,23 +7,25 @@
 #include <string>
 #include <set>
 #include "Options.hh"
-#include "soil/json.hh"
 #include "cppdb/frontend.h"
-#include "soil/STimer.hh"
-#include "soil/MsgQueue.hh"
 #include "cata/TraderService.hh"
+#include "soil/json.hh"
+#include "soil/STimer.hh"
+#include "soil/ReaderWriterQueue.hh"
 
 namespace qatar {
 
 class Server :
-      public cata::TraderCallback {
+      public cata::TraderCallback,
+      public soil::MsgCallback<std::string> {
  public:
   explicit Server(
       const rapidjson::Document& doc);
 
   virtual ~Server();
 
-  void msgCallback(const std::string* msg);
+  virtual void msgCallback(
+      std::shared_ptr<std::string> msg);
 
   // from cata::TraderCallback
   virtual void onRspQryExchange(
@@ -158,7 +160,6 @@ class Server :
     notify(bIsLast);
   }
 
-  
   virtual void onRspQryInvestorPosition(
       const std::string& theInvestorPosition,
       const std::string& theRspInfo,
@@ -173,12 +174,12 @@ class Server :
  protected:
   void sqlString(
       const std::string& t_name,
-      rapidjson::Value& data,
-      std::string& create_sql,
-      std::string& insert_sql);
+      const rapidjson::Value& data,
+      std::string* create_sql,
+      std::string* insert_sql);
 
   void go();
-  
+
   void wait(int mill_second = -1) {
     cond_->wait(mill_second);
   }
@@ -191,8 +192,8 @@ class Server :
 
   void pushMsg(const std::string& msg) {
     if (!msg.empty()) {
-      msg_queue_->pushMsg(
-          new std::string(msg));
+      std::shared_ptr<std::string> p(new std::string(msg));
+      queue_->pushMsg(p);
     }
   }
 
@@ -204,11 +205,10 @@ class Server :
   std::set<std::string> instrus_;
   std::set<std::string> prod_instrus_;  // one instru each product
 
-  std::unique_ptr<soil::MsgQueue<std::string, Server> > msg_queue_;
-
   std::unique_ptr<cppdb::session> db_;
+  std::unique_ptr<soil::ReaderWriterQueue<std::string> > queue_;
 
-  cata::TraderService* trader_service_;
+  std::unique_ptr<cata::TraderService> trader_service_;
 };
 
 };  // namespace qatar

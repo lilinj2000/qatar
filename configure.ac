@@ -49,7 +49,6 @@ BOOST_CPPFLAGS="-I$BOOST_HOME/include -DBOOST_ALL_DYN_LINK"
 BOOST_LIBADD=" \
 	      $BOOST_HOME/lib/libboost_filesystem.so \
 	      $BOOST_HOME/lib/libboost_regex.so \
-	      $BOOST_HOME/lib/libboost_thread.so \
 	      $BOOST_HOME/lib/libboost_system.so"
 AC_SUBST(BOOST_CPPFLAGS)
 AC_SUBST(BOOST_LIBADD)
@@ -106,6 +105,18 @@ CPPDB_LIBADD="-L$CPPDB_HOME/lib -lcppdb"
 AC_SUBST(CPPDB_CPPFLAGS)
 AC_SUBST(CPPDB_LIBADD)
 
+dnl readerwriterqueue lib
+READERWRITERQUEUE_HOME=$home_3rd/readerwriterqueue
+AC_ARG_WITH([readerwriterqueue], 
+    [AS_HELP_STRING([--with-readerwriterqueue],
+        [home path of the readerwriterqueue, defaults to $READERWRITERQUEUE_HOME])],
+    [READERWRITERQUEUE_HOME="$withval"],
+    [READERWRITERQUEUE_HOME="$READERWRITERQUEUE_HOME"])
+AC_SUBST([READERWRITERQUEUE_HOME])
+
+READERWRITERQUEUE_CPPFLAGS="-I$READERWRITERQUEUE_HOME/include"
+AC_SUBST(READERWRITERQUEUE_CPPFLAGS)
+
 dnl soil lib
 AC_ARG_WITH([soil],
     [AS_HELP_STRING([--with-soil],
@@ -136,9 +147,3 @@ AC_SUBST(CATA_LIBADD)
 AC_OUTPUT([
 	Makefile
 	src/Makefile])
-
-
-
-
-
-

@@ -15,14 +15,15 @@ Server::Server(
   cond_.reset(soil::STimer::create());
   options_.reset(new Options(doc));
 
-  msg_queue_.reset(new soil::MsgQueue<std::string, Server>(this));
-
   db_.reset(new cppdb::session(
       options_->dbconn_str));
 
-  trader_service_ = cata::TraderService::create(
-      doc,
-      this);
+  queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
+
+  trader_service_.reset(
+      cata::TraderService::create(
+          doc,
+          this));
 
   go();
 }
@@ -32,7 +33,7 @@ Server::~Server() {
 }
 
 void Server::msgCallback(
-    const std::string* msg) {
+    std::shared_ptr<std::string> msg) {
   SOIL_FUNC_TRACE;
   // SOIL_DEBUG_IF_PRINT(msg);
 
@@ -51,10 +52,10 @@ void Server::msgCallback(
   if (boost::regex_match(key, mat, re_field)) {
     std::string t_name = mat[1];
     rapidjson::Value& f_data = doc[key];
-        
+
     std::string create_sql;
     std::string insert_sql;
-    sqlString(t_name, f_data, create_sql, insert_sql);
+    sqlString(t_name, f_data, &create_sql, &insert_sql);
 
     SOIL_DEBUG_PRINT(create_sql);
     SOIL_DEBUG_PRINT(insert_sql);
@@ -70,37 +71,36 @@ void Server::msgCallback(
 
 void Server::sqlString(
     const std::string& t_name,
-    rapidjson::Value& data,
-    std::string& create_sql,
-    std::string& insert_sql) {
+    const rapidjson::Value& data,
+    std::string* create_sql,
+    std::string* insert_sql) {
   SOIL_FUNC_TRACE;
 
-  create_sql = "CREATE TABLE IF NOT EXISTS "
-      + t_name
-      + " (";
+  (*create_sql) = fmt::format("CREATE TABLE IF NOT EXISTS {} (",
+                              t_name);
 
-  insert_sql = "INSERT INTO "
-      + t_name
-      + " VALUES(";
+
+  (*insert_sql) = fmt::format("INSERT INTO {} VALUES(",
+                              t_name);
 
   bool first = true;
   for (auto itr = data.MemberBegin();
        itr != data.MemberEnd(); ++itr) {
     if (!first) {
-      create_sql += ", ";
-      insert_sql += ", ";
+      (*create_sql) += ", ";
+      (*insert_sql) += ", ";
     } else {
       first = false;
     }
-    create_sql += itr->name.GetString();
-    create_sql += " TEXT";
+    (*create_sql) += itr->name.GetString();
+    (*create_sql) += " TEXT";
 
-    insert_sql += "'";
-    insert_sql += itr->value.GetString();
-    insert_sql += "'";
+    (*insert_sql) += "'";
+    (*insert_sql) += itr->value.GetString();
+    (*insert_sql) += "'";
   }
-  create_sql += ");";
-  insert_sql += ");";
+  (*create_sql) += ");";
+  (*insert_sql) += ");";
 
   return;
 }
@@ -175,8 +175,6 @@ void Server::go() {
   wait(1000);
   trader_service_->queryPosition("");
   wait();
-
-  wait(10*60000);
 }
 
 // void Server::fetchInstrus() {
