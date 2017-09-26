@@ -1,6 +1,7 @@
 #! /bin/sh
 
-home_app=~/app
+node=`uname -n`
+home_app=~/app/${node}
 
 home_qatar=${home_app}/qatar
 
