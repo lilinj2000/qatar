@@ -37,10 +37,9 @@ void Server::msgCallback(
   SOIL_FUNC_TRACE;
   // SOIL_DEBUG_IF_PRINT(msg);
 
-  std::string escape_msg = soil::json::escape_string(*msg);
   rapidjson::Document doc;
-  if (doc.Parse(escape_msg).HasParseError()) {
-    SOIL_DEBUG_PRINT(soil::json::get_parse_error(doc, escape_msg));
+  if (doc.Parse(*msg).HasParseError()) {
+    SOIL_DEBUG_PRINT(soil::json::get_parse_error(doc, *msg));
     return;
   }
 
