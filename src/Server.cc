@@ -35,7 +35,7 @@ Server::~Server() {
 void Server::msgCallback(
     std::shared_ptr<std::string> msg) {
   SOIL_FUNC_TRACE;
-  // SOIL_DEBUG_IF_PRINT(msg);
+  SOIL_DEBUG_PRINT(*msg);
 
   rapidjson::Document doc;
   if (doc.Parse(*msg).HasParseError()) {
@@ -68,6 +68,37 @@ void Server::msgCallback(
   }
 }
 
+void Server::fieldType(
+    const rapidjson::Value& data,
+    std::string* type,
+    std::string* value) {
+  if (data.IsString()) {
+    (*type) = "TEXT";
+    (*value).append("'");
+    (*value) += data.GetString();
+    (*value).append("'");
+  } else if (data.IsDouble()) {
+    (*type) = "REAL";
+    (*value) = std::to_string(data.GetDouble());
+  } else if (data.IsNumber()
+             || data.IsBool()) {
+    (*type) = "INTEGER";
+    if (data.IsInt()) {
+      (*value) = std::to_string(data.GetInt());
+    } else if (data.IsUint()) {
+      (*value) = std::to_string(data.GetUint());
+    } else if (data.IsInt64()) {
+      (*value) = std::to_string(data.GetInt64());
+    } else if (data.IsUint64()) {
+      (*value) = std::to_string(data.GetUint64());
+    } else if (data.IsTrue()) {
+      (*value) = "1";
+    } else {
+      (*value) = "0";
+    }
+  }
+}
+               
 void Server::sqlString(
     const std::string& t_name,
     const rapidjson::Value& data,
@@ -91,12 +122,12 @@ void Server::sqlString(
     } else {
       first = false;
     }
-    (*create_sql) += itr->name.GetString();
-    (*create_sql) += " TEXT";
 
-    (*insert_sql) += "'";
-    (*insert_sql) += itr->value.GetString();
-    (*insert_sql) += "'";
+    std::string type, value;
+    fieldType(itr->value, &type, &value);
+    (*create_sql) += itr->name.GetString();
+    (*create_sql) += " " + type;
+    (*insert_sql) += value;
   }
   (*create_sql) += ");";
   (*insert_sql) += ");";

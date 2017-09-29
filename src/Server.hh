@@ -197,6 +197,11 @@ class Server :
     }
   }
 
+  void fieldType(
+    const rapidjson::Value& data,
+    std::string* type,
+    std::string* value);
+
  private:
   std::unique_ptr<Options> options_;
 
