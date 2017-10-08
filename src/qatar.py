@@ -50,7 +50,8 @@ log = {
 
 qatar = {
     "dbconn_str": "sqlite3:db=qatar.db;@pool_size=16",
-    "sub_addr": ">tcp://127.0.0.1:9991"
+    "sub_addr": ">tcp://127.0.0.1:9991",
+    "push_addr": ">tcp://127.0.0.1:8990"
     }
 
 config = {

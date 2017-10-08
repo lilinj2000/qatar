@@ -25,6 +25,10 @@ Server::Server(
 
   sub_service_->setSubscribe("");
 
+  push_service_.reset(
+      zod::PushService::create(
+          options_->push_addr));
+
   queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
   
   trader_service_.reset(
@@ -33,6 +37,8 @@ Server::Server(
           this));
 
   go();
+
+  pushInstrus();
 }
 
 Server::~Server() {
@@ -163,6 +169,31 @@ void Server::sqlString(
   (*insert_sql) += ");";
 
   return;
+}
+
+void Server::pushInstrus() {
+  SOIL_FUNC_TRACE;
+
+  try {
+    std::string sql = "SELECT DISTINCT InstrumentID FROM Instrument";
+
+    cppdb::result res = (*db_) <<sql;
+
+    while (res.next()) {
+      std::string instru;
+      res >> instru;
+      rapidjson::Document d;
+      rapidjson::Pointer("/instru").Set(d, instru);
+
+      rapidjson::StringBuffer buffer;
+      rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+      d.Accept(writer);
+      push_service_->sendMsg(buffer.GetString());
+    }
+  } catch (std::exception const &e) {
+    SOIL_ERROR("ERROR: {}", e.what());
+  }
+
 }
 
 void Server::go() {

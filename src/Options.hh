@@ -16,6 +16,7 @@ class Options {
 
   std::string dbconn_str;
   std::string sub_addr;
+  std::string push_addr;
 };
 
 }  // namespace qatar

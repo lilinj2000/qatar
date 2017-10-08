@@ -13,6 +13,7 @@
 #include "soil/STimer.hh"
 #include "soil/ReaderWriterQueue.hh"
 #include "zod/SubService.hh"
+#include "zod/PushService.hh"
 
 namespace qatar {
 
@@ -210,6 +211,8 @@ class Server :
     std::string* type,
     std::string* value);
 
+  void pushInstrus();
+
  private:
   std::unique_ptr<Options> options_;
 
@@ -223,6 +226,7 @@ class Server :
 
   std::unique_ptr<cata::TraderService> trader_service_;
   std::unique_ptr<zod::SubService> sub_service_;
+  std::unique_ptr<zod::PushService> push_service_;
 };
 
 };  // namespace qatar
