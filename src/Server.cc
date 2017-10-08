@@ -30,7 +30,7 @@ Server::Server(
           options_->push_addr));
 
   queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
-  
+
   trader_service_.reset(
       cata::TraderService::create(
           doc,
@@ -134,7 +134,7 @@ void Server::fieldType(
     }
   }
 }
-               
+
 void Server::sqlString(
     const std::string& t_name,
     const rapidjson::Value& data,
@@ -193,7 +193,6 @@ void Server::pushInstrus() {
   } catch (std::exception const &e) {
     SOIL_ERROR("ERROR: {}", e.what());
   }
-
 }
 
 void Server::go() {
