@@ -143,6 +143,18 @@ CATA_LIBADD="$CATA_HOME/lib/libcata_trader.la"
 AC_SUBST(CATA_CPPFLAGS)
 AC_SUBST(CATA_LIBADD)
 
+dnl zod lib
+AC_ARG_WITH([zod],
+    [AS_HELP_STRING([--with-zod],
+        [home path of the zod, defaults to $home_libs/zod])],
+    [ZOD_HOME="$withval"],
+    [ZOD_HOME="$home_libs/zod"])
+AC_SUBST([ZOD_HOME])
+
+ZOD_CPPFLAGS="-I$ZOD_HOME/include"
+ZOD_LIBADD="$ZOD_HOME/lib/libzod.la"
+AC_SUBST(ZOD_CPPFLAGS)
+AC_SUBST(ZOD_LIBADD)
 
 AC_OUTPUT([
 	Makefile

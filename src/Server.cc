@@ -18,8 +18,15 @@ Server::Server(
   db_.reset(new cppdb::session(
       options_->dbconn_str));
 
-  queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
+  sub_service_.reset(
+      zod::SubService::create(
+          options_->sub_addr,
+          this));
 
+  sub_service_->setSubscribe("");
+
+  queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
+  
   trader_service_.reset(
       cata::TraderService::create(
           doc,
@@ -43,6 +50,29 @@ void Server::msgCallback(
     return;
   }
 
+  parseDoc(doc);
+}
+
+void Server::msgCallback(
+    std::shared_ptr<zod::Msg> msg) {
+  SOIL_FUNC_TRACE;
+
+  rapidjson::Document doc;
+  if (doc.Parse(
+          reinterpret_cast<const char*>(msg->data()),
+          msg->len()).HasParseError()) {
+    SOIL_DEBUG_PRINT(
+        soil::json::get_parse_error(doc));
+    return;
+  }
+
+  parseDoc(doc);
+}
+
+void Server::parseDoc(
+    const rapidjson::Document& doc) {
+  SOIL_FUNC_TRACE;
+
   auto itr = doc.MemberBegin();
   std::string key = itr->name.GetString();
 
@@ -50,7 +80,7 @@ void Server::msgCallback(
   boost::smatch mat;
   if (boost::regex_match(key, mat, re_field)) {
     std::string t_name = mat[1];
-    rapidjson::Value& f_data = doc[key];
+    const rapidjson::Value& f_data = doc[key];
 
     std::string create_sql;
     std::string insert_sql;

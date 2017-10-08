@@ -58,7 +58,7 @@ qatar_OBJECTS = $(am_qatar_OBJECTS)
 am__DEPENDENCIES_1 =
 qatar_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 qatar_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	$(qatar_LDFLAGS) $(LDFLAGS) -o $@
@@ -231,6 +231,9 @@ SPDLOG_CPPFLAGS = @SPDLOG_CPPFLAGS@
 SPDLOG_HOME = @SPDLOG_HOME@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ZOD_CPPFLAGS = @ZOD_CPPFLAGS@
+ZOD_HOME = @ZOD_HOME@
+ZOD_LIBADD = @ZOD_LIBADD@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -300,14 +303,16 @@ qatar_CPPFLAGS = -I$(top_srcdir) \
 		$(FMT_CPPFLAGS) \
 		$(SPDLOG_CPPFLAGS) \
 		$(READERWRITERQUEUE_CPPFLAGS) \
-		$(CATA_CPPFLAGS)
+		$(CATA_CPPFLAGS) \
+		$(ZOD_CPPFLAGS)
 
 qatar_LDADD = \
 	$(BOOST_LIBADD) \
 	$(SOIL_LIBADD) \
 	$(FMT_LIBADD) \
 	$(CPPDB_LIBADD) \
-	$(CATA_LIBADD)
+	$(CATA_LIBADD) \
+	$(ZOD_LIBADD)
 
 qatar_LDFLAGS = $(LIBADD_DL) -Wl,--no-as-needed -pthread -lrt
 

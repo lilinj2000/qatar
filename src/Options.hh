@@ -15,6 +15,7 @@ class Options {
       const rapidjson::Document& doc);
 
   std::string dbconn_str;
+  std::string sub_addr;
 };
 
 }  // namespace qatar

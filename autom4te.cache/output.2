@@ -661,6 +661,9 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIB@&t@OBJS
+ZOD_LIBADD
+ZOD_CPPFLAGS
+ZOD_HOME
 CATA_LIBADD
 CATA_CPPFLAGS
 CATA_HOME
@@ -819,6 +822,7 @@ with_cppdb
 with_readerwriterqueue
 with_soil
 with_cata
+with_zod
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1490,6 +1494,7 @@ Optional Packages:
                           $READERWRITERQUEUE_HOME
   --with-soil             home path of the soil, defaults to $home_libs/soil
   --with-cata             home path of the cata, defaults to $home_libs/cata
+  --with-zod              home path of the zod, defaults to $home_libs/zod
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -16378,6 +16383,20 @@ fi
 CATA_CPPFLAGS="-I$CATA_HOME/include"
 CATA_LIBADD="$CATA_HOME/lib/libcata_trader.la"
 
+
+
+
+@%:@ Check whether --with-zod was given.
+if test "${with_zod+set}" = set; then
+  withval=$with_zod; ZOD_HOME="$withval"
+else
+  ZOD_HOME="$home_libs/zod"
+fi
+
+
+
+ZOD_CPPFLAGS="-I$ZOD_HOME/include"
+ZOD_LIBADD="$ZOD_HOME/lib/libzod.la"
 
 
 

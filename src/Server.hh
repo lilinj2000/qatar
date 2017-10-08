@@ -12,12 +12,14 @@
 #include "soil/json.hh"
 #include "soil/STimer.hh"
 #include "soil/ReaderWriterQueue.hh"
+#include "zod/SubService.hh"
 
 namespace qatar {
 
 class Server :
       public cata::TraderCallback,
-      public soil::MsgCallback<std::string> {
+      public soil::MsgCallback<std::string>,
+      public zod::MsgCallback {
  public:
   explicit Server(
       const rapidjson::Document& doc);
@@ -26,6 +28,9 @@ class Server :
 
   virtual void msgCallback(
       std::shared_ptr<std::string> msg);
+
+  virtual void msgCallback(
+      std::shared_ptr<zod::Msg> msg);
 
   // from cata::TraderCallback
   virtual void onRspQryExchange(
@@ -197,6 +202,9 @@ class Server :
     }
   }
 
+  void parseDoc(
+      const rapidjson::Document& doc);
+
   void fieldType(
     const rapidjson::Value& data,
     std::string* type,
@@ -214,6 +222,7 @@ class Server :
   std::unique_ptr<soil::ReaderWriterQueue<std::string> > queue_;
 
   std::unique_ptr<cata::TraderService> trader_service_;
+  std::unique_ptr<zod::SubService> sub_service_;
 };
 
 };  // namespace qatar

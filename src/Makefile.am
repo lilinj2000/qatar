@@ -17,14 +17,16 @@ qatar_CPPFLAGS = -I$(top_srcdir) \
 		$(FMT_CPPFLAGS) \
 		$(SPDLOG_CPPFLAGS) \
 		$(READERWRITERQUEUE_CPPFLAGS) \
-		$(CATA_CPPFLAGS)
+		$(CATA_CPPFLAGS) \
+		$(ZOD_CPPFLAGS)
 
 qatar_LDADD = \
 	$(BOOST_LIBADD) \
 	$(SOIL_LIBADD) \
 	$(FMT_LIBADD) \
 	$(CPPDB_LIBADD) \
-	$(CATA_LIBADD)
+	$(CATA_LIBADD) \
+	$(ZOD_LIBADD)
 
 qatar_LDFLAGS = $(LIBADD_DL) -Wl,--no-as-needed -pthread -lrt
 
