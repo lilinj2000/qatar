@@ -5,7 +5,7 @@
 #include "Server.hh"
 #include "soil/Log.hh"
 #include "soil/json.hh"
-// #include "soil/Pause.hh"
+#include "soil/Pause.hh"
 
 int main(int argc, char* argv[]) {
   try {
@@ -15,6 +15,9 @@ int main(int argc, char* argv[]) {
 
     std::unique_ptr<qatar::Server> server;
     server.reset(new qatar::Server(doc));
+
+    std::unique_ptr<soil::Pause> pause(
+        soil::Pause::create());
   } catch (std::exception& e) {
     SOIL_ERROR("Error: {}", e.what());
 

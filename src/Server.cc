@@ -188,6 +188,8 @@ void Server::pushInstrus() {
       rapidjson::StringBuffer buffer;
       rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
       d.Accept(writer);
+
+      SOIL_DEBUG_PRINT(buffer.GetString());
       push_service_->sendMsg(buffer.GetString());
     }
   } catch (std::exception const &e) {
