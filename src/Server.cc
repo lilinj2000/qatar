@@ -63,16 +63,10 @@ void Server::msgCallback(
     std::shared_ptr<zod::Msg> msg) {
   SOIL_FUNC_TRACE;
 
-  rapidjson::Document doc;
-  if (doc.Parse(
-          reinterpret_cast<const char*>(msg->data()),
-          msg->len()).HasParseError()) {
-    SOIL_DEBUG_PRINT(
-        soil::json::get_parse_error(doc));
-    return;
-  }
-
-  parseDoc(doc);
+  std::string data(
+      reinterpret_cast<const char*>(msg->data()),
+      msg->len());
+  pushMsg(data);
 }
 
 void Server::parseDoc(
