@@ -1,7 +1,7 @@
 {
     "cata_trader": {
         "broker_id": "9999", 
-        "flow_path": "traderflow/", 
+        "flow_path": "./", 
         "front_address": "tcp://180.168.146.187:10000", 
         "investor_id": "037135", 
         "password": "y888888", 
@@ -18,7 +18,7 @@
             }, 
             {
                 "sink": {
-                    "file_name": "logs/qatar.log", 
+                    "file_name": "qatar.log", 
                     "max_file_size": 5000000, 
                     "max_files": 10, 
                     "type": "rotating_file_sink_mt"
@@ -27,7 +27,7 @@
         ]
     }, 
     "qatar": {
-        "dbconn_str": "sqlite3:db=qatar.db;@pool_size=16", 
+        "db": "qatar.db", 
         "push_addr": ">tcp://127.0.0.1:9980", 
         "sub_addr": ">tcp://127.0.0.1:9991"
     }

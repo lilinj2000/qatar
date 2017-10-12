@@ -15,8 +15,19 @@ Server::Server(
   cond_.reset(soil::STimer::create());
   options_.reset(new Options(doc));
 
-  db_.reset(new cppdb::session(
-      options_->dbconn_str));
+  trader_service_.reset(
+      cata::TraderService::create(
+          doc,
+          this));
+  trading_day_ = trader_service_->tradingDay();
+  SOIL_INFO("trading day: {}", trading_day_);
+
+  std::string dbconn_str = fmt::format(
+      "sqlite3:db={}_{};@pool_size=16",
+      options_->db, trading_day_);
+  db_.reset(new cppdb::session(dbconn_str));
+
+  queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
 
   sub_service_.reset(
       zod::SubService::create(
@@ -29,16 +40,7 @@ Server::Server(
       zod::PushService::create(
           options_->push_addr));
 
-  queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
-
-  trader_service_.reset(
-      cata::TraderService::create(
-          doc,
-          this));
-
   go();
-
-  pushInstrus();
 }
 
 Server::~Server() {
@@ -188,11 +190,21 @@ void Server::pushInstrus() {
     }
   } catch (std::exception const &e) {
     SOIL_ERROR("ERROR: {}", e.what());
+
+    throw;
   }
 }
 
 void Server::go() {
   SOIL_FUNC_TRACE;
+
+  try {
+    pushInstrus();
+
+    return;
+  } catch (...) {
+    SOIL_INFO("New trading day - {} !!!", trading_day_);
+  }
 
   wait(1000);
   trader_service_->queryExchange("");
@@ -259,6 +271,8 @@ void Server::go() {
   wait(1000);
   trader_service_->queryPosition("");
   wait();
+
+  pushInstrus();
 }
 
 };  // namespace qatar

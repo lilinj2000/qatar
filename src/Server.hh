@@ -227,6 +227,8 @@ class Server :
   std::unique_ptr<cata::TraderService> trader_service_;
   std::unique_ptr<zod::SubService> sub_service_;
   std::unique_ptr<zod::PushService> push_service_;
+
+  std::string trading_day_;
 };
 
 };  // namespace qatar

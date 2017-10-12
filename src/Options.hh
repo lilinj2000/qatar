@@ -14,7 +14,7 @@ class Options {
   explicit Options(
       const rapidjson::Document& doc);
 
-  std::string dbconn_str;
+  std::string db;
   std::string sub_addr;
   std::string push_addr;
 };
