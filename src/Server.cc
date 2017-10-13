@@ -75,28 +75,39 @@ void Server::parseDoc(
     const rapidjson::Document& doc) {
   SOIL_FUNC_TRACE;
 
-  auto itr = doc.MemberBegin();
-  std::string key = itr->name.GetString();
+  try {
+    auto itr = doc.MemberBegin();
+    std::string key = itr->name.GetString();
 
-  boost::regex re_field("^CThostFtdc(.*)Field$");
-  boost::smatch mat;
-  if (boost::regex_match(key, mat, re_field)) {
-    std::string t_name = mat[1];
-    const rapidjson::Value& f_data = doc[key];
+    boost::regex re_field("^CThostFtdc(.*)Field$");
+    boost::smatch mat;
+    if (boost::regex_match(key, mat, re_field)) {
+      std::string t_name = mat[1];
+      const rapidjson::Value& f_data = doc[key];
 
-    std::string create_sql;
-    std::string insert_sql;
-    sqlString(t_name, f_data, &create_sql, &insert_sql);
+      auto i_iter = sqls_.find(t_name);
+      if (i_iter != sqls_.end()) {
+        doInsert(i_iter->second, f_data);
+        return;
+      }
 
-    SOIL_DEBUG_PRINT(create_sql);
-    SOIL_DEBUG_PRINT(insert_sql);
+      std::string create_sql;
+      std::string insert_sql;
+      sqlString(t_name, f_data, &create_sql, &insert_sql);
 
-    try {
+      SOIL_DEBUG_PRINT(create_sql);
+      SOIL_DEBUG_PRINT(insert_sql);
+
       (*db_) <<create_sql <<cppdb::exec;
-      (*db_) <<insert_sql <<cppdb::exec;
-    } catch (std::exception const &e) {
-      SOIL_ERROR("db error: {}", e.what());
+
+      cppdb::statement stat = db_->prepare(insert_sql);
+      doInsert(stat, f_data);
+
+      sqls_[t_name] = stat;
+      // (*db_) <<insert_sql <<cppdb::exec;
     }
+  } catch (std::exception const &e) {
+    SOIL_ERROR("Error: {}", e.what());
   }
 }
 
@@ -131,6 +142,40 @@ void Server::fieldType(
   }
 }
 
+void Server::doInsert(
+    cppdb::statement stat,
+    const rapidjson::Value& data) {
+  SOIL_FUNC_TRACE;
+
+  stat.reset();
+  for (auto itr = data.MemberBegin();
+       itr != data.MemberEnd(); ++itr) {
+    auto& value = itr->value;
+
+    if (value.IsString()) {
+      stat <<value.GetString();
+    } else if (value.IsDouble()) {
+      stat <<value.GetDouble();
+    } else if (value.IsNumber()
+               || value.IsBool()) {
+      if (value.IsInt()) {
+        stat <<value.GetInt();
+      } else if (value.IsUint()) {
+        stat <<value.GetUint();
+      } else if (value.IsInt64()) {
+        stat <<value.GetInt64();
+      } else if (value.IsUint64()) {
+        stat <<value.GetUint64();
+      } else if (value.IsTrue()) {
+        stat <<1;
+      } else {
+        stat <<0;
+      }
+    }
+  }
+  stat.exec();
+}
+
 void Server::sqlString(
     const std::string& t_name,
     const rapidjson::Value& data,
@@ -159,7 +204,7 @@ void Server::sqlString(
     fieldType(itr->value, &type, &value);
     (*create_sql) += itr->name.GetString();
     (*create_sql) += " " + type;
-    (*insert_sql) += value;
+    (*insert_sql) += "?";
   }
   (*create_sql) += ");";
   (*insert_sql) += ");";

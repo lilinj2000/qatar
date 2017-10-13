@@ -5,7 +5,8 @@
 #define QATAR_SERVER_HH
 
 #include <string>
-#include <set>
+#include <map>
+
 #include "Options.hh"
 #include "cppdb/frontend.h"
 #include "cata/TraderService.hh"
@@ -211,15 +212,16 @@ class Server :
     std::string* type,
     std::string* value);
 
+  void doInsert(
+      cppdb::statement stat,
+      const rapidjson::Value& data);
+
   void pushInstrus();
 
  private:
   std::unique_ptr<Options> options_;
 
   std::unique_ptr<soil::STimer> cond_;
-
-  std::set<std::string> instrus_;
-  std::set<std::string> prod_instrus_;  // one instru each product
 
   std::unique_ptr<cppdb::session> db_;
   std::unique_ptr<soil::ReaderWriterQueue<std::string> > queue_;
@@ -229,6 +231,9 @@ class Server :
   std::unique_ptr<zod::PushService> push_service_;
 
   std::string trading_day_;
+
+  std::map<std::string,
+           cppdb::statement> sqls_;
 };
 
 };  // namespace qatar
