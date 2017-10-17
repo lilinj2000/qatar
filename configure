@@ -661,6 +661,9 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+GTEST_LIBADD
+GTEST_CPPFLAGS
+GTEST_HOME
 ZOD_LIBADD
 ZOD_CPPFLAGS
 ZOD_HOME
@@ -823,6 +826,7 @@ with_readerwriterqueue
 with_soil
 with_cata
 with_zod
+with_gtest
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1495,6 +1499,7 @@ Optional Packages:
   --with-soil             home path of the soil, defaults to $home_libs/soil
   --with-cata             home path of the cata, defaults to $home_libs/cata
   --with-zod              home path of the zod, defaults to $home_libs/zod
+  --with-gtest            home path of the gtest, defaults to $GTEST_HOME
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -16400,7 +16405,23 @@ ZOD_LIBADD="$ZOD_HOME/lib/libzod.la"
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile"
+GTEST_HOME=$home_3rd/googletest
+
+# Check whether --with-gtest was given.
+if test "${with_gtest+set}" = set; then
+  withval=$with_gtest; GTEST_HOME="$withval"
+else
+  GTEST_HOME="$GTEST_HOME"
+fi
+
+
+
+GTEST_CPPFLAGS=-I$GTEST_HOME/include
+GTEST_LIBADD="$GTEST_HOME/lib/libgtest.a $GTEST_HOME/lib/libgtest_main.a"
+
+
+
+ac_config_files="$ac_config_files Makefile src/Makefile utest/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -17430,6 +17451,7 @@ do
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "utest/Makefile") CONFIG_FILES="$CONFIG_FILES utest/Makefile" ;;
 
   *) { { $as_echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 $as_echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

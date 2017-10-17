@@ -25,9 +25,9 @@ Server::Server(
   std::string dbconn_str = fmt::format(
       "sqlite3:db={}_{};@pool_size=16",
       options_->db, trading_day_);
-  db_.reset(new cppdb::session(dbconn_str));
-
-  queue_.reset(new soil::ReaderWriterQueue<std::string>(this));
+  dbservice_.reset(new DBService(
+      dbconn_str,
+      options_->batch_size));
 
   sub_service_.reset(
       zod::SubService::create(
@@ -47,21 +47,7 @@ Server::~Server() {
   SOIL_FUNC_TRACE;
 }
 
-void Server::msgCallback(
-    std::shared_ptr<std::string> msg) {
-  SOIL_FUNC_TRACE;
-  SOIL_DEBUG_PRINT(*msg);
-
-  rapidjson::Document doc;
-  if (doc.Parse(*msg).HasParseError()) {
-    SOIL_DEBUG_PRINT(soil::json::get_parse_error(doc, *msg));
-    return;
-  }
-
-  parseDoc(doc);
-}
-
-void Server::msgCallback(
+void Server::onMsg(
     std::shared_ptr<zod::Msg> msg) {
   SOIL_FUNC_TRACE;
 
@@ -71,158 +57,15 @@ void Server::msgCallback(
   pushMsg(data);
 }
 
-void Server::parseDoc(
-    const rapidjson::Document& doc) {
-  SOIL_FUNC_TRACE;
-
-  try {
-    auto itr = doc.MemberBegin();
-    std::string key = itr->name.GetString();
-
-    boost::regex re_field("^CThostFtdc(.*)Field$");
-    boost::smatch mat;
-    if (boost::regex_match(key, mat, re_field)) {
-      std::string t_name = mat[1];
-      const rapidjson::Value& f_data = doc[key];
-
-      auto i_iter = sqls_.find(t_name);
-      if (i_iter != sqls_.end()) {
-        doInsert(i_iter->second, f_data);
-        return;
-      }
-
-      std::string create_sql;
-      std::string insert_sql;
-      sqlString(t_name, f_data, &create_sql, &insert_sql);
-
-      SOIL_DEBUG_PRINT(create_sql);
-      SOIL_DEBUG_PRINT(insert_sql);
-
-      (*db_) <<create_sql <<cppdb::exec;
-
-      cppdb::statement stat = db_->prepare(insert_sql);
-      doInsert(stat, f_data);
-
-      sqls_[t_name] = stat;
-      // (*db_) <<insert_sql <<cppdb::exec;
-    }
-  } catch (std::exception const &e) {
-    SOIL_ERROR("Error: {}", e.what());
-  }
-}
-
-void Server::fieldType(
-    const rapidjson::Value& data,
-    std::string* type,
-    std::string* value) {
-  if (data.IsString()) {
-    (*type) = "TEXT";
-    (*value).append("'");
-    (*value) += data.GetString();
-    (*value).append("'");
-  } else if (data.IsDouble()) {
-    (*type) = "REAL";
-    (*value) = std::to_string(data.GetDouble());
-  } else if (data.IsNumber()
-             || data.IsBool()) {
-    (*type) = "INTEGER";
-    if (data.IsInt()) {
-      (*value) = std::to_string(data.GetInt());
-    } else if (data.IsUint()) {
-      (*value) = std::to_string(data.GetUint());
-    } else if (data.IsInt64()) {
-      (*value) = std::to_string(data.GetInt64());
-    } else if (data.IsUint64()) {
-      (*value) = std::to_string(data.GetUint64());
-    } else if (data.IsTrue()) {
-      (*value) = "1";
-    } else {
-      (*value) = "0";
-    }
-  }
-}
-
-void Server::doInsert(
-    cppdb::statement stat,
-    const rapidjson::Value& data) {
-  SOIL_FUNC_TRACE;
-
-  stat.reset();
-  for (auto itr = data.MemberBegin();
-       itr != data.MemberEnd(); ++itr) {
-    auto& value = itr->value;
-
-    if (value.IsString()) {
-      stat <<value.GetString();
-    } else if (value.IsDouble()) {
-      stat <<value.GetDouble();
-    } else if (value.IsNumber()
-               || value.IsBool()) {
-      if (value.IsInt()) {
-        stat <<value.GetInt();
-      } else if (value.IsUint()) {
-        stat <<value.GetUint();
-      } else if (value.IsInt64()) {
-        stat <<value.GetInt64();
-      } else if (value.IsUint64()) {
-        stat <<value.GetUint64();
-      } else if (value.IsTrue()) {
-        stat <<1;
-      } else {
-        stat <<0;
-      }
-    }
-  }
-  stat.exec();
-}
-
-void Server::sqlString(
-    const std::string& t_name,
-    const rapidjson::Value& data,
-    std::string* create_sql,
-    std::string* insert_sql) {
-  SOIL_FUNC_TRACE;
-
-  (*create_sql) = fmt::format("CREATE TABLE IF NOT EXISTS {} (",
-                              t_name);
-
-
-  (*insert_sql) = fmt::format("INSERT INTO {} VALUES(",
-                              t_name);
-
-  bool first = true;
-  for (auto itr = data.MemberBegin();
-       itr != data.MemberEnd(); ++itr) {
-    if (!first) {
-      (*create_sql) += ", ";
-      (*insert_sql) += ", ";
-    } else {
-      first = false;
-    }
-
-    std::string type, value;
-    fieldType(itr->value, &type, &value);
-    (*create_sql) += itr->name.GetString();
-    (*create_sql) += " " + type;
-    (*insert_sql) += "?";
-  }
-  (*create_sql) += ");";
-  (*insert_sql) += ");";
-
-  return;
-}
-
 void Server::pushInstrus() {
   SOIL_FUNC_TRACE;
 
   try {
-    std::string sql = "SELECT DISTINCT InstrumentID FROM Instrument";
+    InstrusType instrus;
+    dbservice_->fetchInstrus(&instrus);
+    SOIL_DEBUG_PRINT(instrus.size());
 
-    cppdb::result res = (*db_) <<sql;
-
-    while (res.next()) {
-      std::string instru;
-      res >> instru;
+    for (auto& instru : instrus) {
       rapidjson::Document d;
       rapidjson::Pointer("/instru").Set(d, instru);
 
@@ -235,7 +78,6 @@ void Server::pushInstrus() {
     }
   } catch (std::exception const &e) {
     SOIL_ERROR("ERROR: {}", e.what());
-
     throw;
   }
 }

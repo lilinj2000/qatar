@@ -15,6 +15,7 @@ class Options {
       const rapidjson::Document& doc);
 
   std::string db;
+  int batch_size;
   std::string sub_addr;
   std::string push_addr;
 };

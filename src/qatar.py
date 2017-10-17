@@ -50,6 +50,7 @@ log = {
 
 qatar = {
     "db": "qatar.db",
+    "batch_size": 1024,
     "sub_addr": ">tcp://127.0.0.1:9991",
     "push_addr": ">tcp://127.0.0.1:9980"
     }

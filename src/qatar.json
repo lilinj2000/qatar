@@ -27,6 +27,7 @@
         ]
     }, 
     "qatar": {
+        "batch_size": 1024, 
         "db": "qatar.db", 
         "push_addr": ">tcp://127.0.0.1:9980", 
         "sub_addr": ">tcp://127.0.0.1:9991"

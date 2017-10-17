@@ -5,6 +5,7 @@ SUBDIRS =
 bin_PROGRAMS = qatar
 qatar_SOURCES = \
 	Options.cc \
+	DBService.cc \
 	Server.cc \
 	Main.cc 
 
@@ -33,6 +34,7 @@ qatar_LDFLAGS = $(LIBADD_DL) -Wl,--no-as-needed -pthread -lrt
 # header files
 noinst_HEADERS = \
 	Options.hh \
+	DBService.hh \
 	Server.hh
 
 EXTRA_DIST = env.sh qatar.json

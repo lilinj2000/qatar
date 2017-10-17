@@ -1,0 +1,27 @@
+{
+    "log": {
+        "level": "info", 
+        "sinks": [
+            {
+                "sink": {
+                    "level": "trace", 
+                    "type": "stdout_sink_mt"
+                }
+            }, 
+            {
+                "sink": {
+                    "file_name": "utest.log", 
+                    "max_file_size": 5000000, 
+                    "max_files": 10, 
+                    "type": "rotating_file_sink_mt"
+                }
+            }
+        ]
+    }, 
+    "utest": {
+        "db": "qatar.db",
+	"batch_size": 1000,
+        "data_file": "instru.json",
+	"iterations": 500
+    }
+}

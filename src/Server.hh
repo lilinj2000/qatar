@@ -5,14 +5,12 @@
 #define QATAR_SERVER_HH
 
 #include <string>
-#include <map>
 
 #include "Options.hh"
-#include "cppdb/frontend.h"
+#include "DBService.hh"
 #include "cata/TraderService.hh"
 #include "soil/json.hh"
 #include "soil/STimer.hh"
-#include "soil/ReaderWriterQueue.hh"
 #include "zod/SubService.hh"
 #include "zod/PushService.hh"
 
@@ -20,7 +18,6 @@ namespace qatar {
 
 class Server :
       public cata::TraderCallback,
-      public soil::MsgCallback<std::string>,
       public zod::MsgCallback {
  public:
   explicit Server(
@@ -28,11 +25,14 @@ class Server :
 
   virtual ~Server();
 
-  virtual void msgCallback(
-      std::shared_ptr<std::string> msg);
-
-  virtual void msgCallback(
+  virtual void onMsg(
       std::shared_ptr<zod::Msg> msg);
+
+  virtual void onStart() {
+  }
+
+  virtual void onStop() {
+  }
 
   // from cata::TraderCallback
   virtual void onRspQryExchange(
@@ -179,12 +179,6 @@ class Server :
   }
 
  protected:
-  void sqlString(
-      const std::string& t_name,
-      const rapidjson::Value& data,
-      std::string* create_sql,
-      std::string* insert_sql);
-
   void go();
 
   void wait(int mill_second = -1) {
@@ -198,23 +192,8 @@ class Server :
   }
 
   void pushMsg(const std::string& msg) {
-    if (!msg.empty()) {
-      std::shared_ptr<std::string> p(new std::string(msg));
-      queue_->pushMsg(p);
-    }
+      dbservice_->pushMsg(msg);
   }
-
-  void parseDoc(
-      const rapidjson::Document& doc);
-
-  void fieldType(
-    const rapidjson::Value& data,
-    std::string* type,
-    std::string* value);
-
-  void doInsert(
-      cppdb::statement stat,
-      const rapidjson::Value& data);
 
   void pushInstrus();
 
@@ -223,17 +202,13 @@ class Server :
 
   std::unique_ptr<soil::STimer> cond_;
 
-  std::unique_ptr<cppdb::session> db_;
-  std::unique_ptr<soil::ReaderWriterQueue<std::string> > queue_;
+  std::unique_ptr<DBService> dbservice_;
 
   std::unique_ptr<cata::TraderService> trader_service_;
   std::unique_ptr<zod::SubService> sub_service_;
   std::unique_ptr<zod::PushService> push_service_;
 
   std::string trading_day_;
-
-  std::map<std::string,
-           cppdb::statement> sqls_;
 };
 
 };  // namespace qatar

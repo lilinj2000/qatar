@@ -52,8 +52,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(qatardir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_qatar_OBJECTS = qatar-Options.$(OBJEXT) qatar-Server.$(OBJEXT) \
-	qatar-Main.$(OBJEXT)
+am_qatar_OBJECTS = qatar-Options.$(OBJEXT) qatar-DBService.$(OBJEXT) \
+	qatar-Server.$(OBJEXT) qatar-Main.$(OBJEXT)
 qatar_OBJECTS = $(am_qatar_OBJECTS)
 am__DEPENDENCIES_1 =
 qatar_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -182,6 +182,9 @@ FMT_CPPFLAGS = @FMT_CPPFLAGS@
 FMT_HOME = @FMT_HOME@
 FMT_LIBADD = @FMT_LIBADD@
 GREP = @GREP@
+GTEST_CPPFLAGS = @GTEST_CPPFLAGS@
+GTEST_HOME = @GTEST_HOME@
+GTEST_LIBADD = @GTEST_LIBADD@
 HAVE_CXX11 = @HAVE_CXX11@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -291,6 +294,7 @@ AUTOMAKE_OPTIONS = foreign
 SUBDIRS = 
 qatar_SOURCES = \
 	Options.cc \
+	DBService.cc \
 	Server.cc \
 	Main.cc 
 
@@ -319,6 +323,7 @@ qatar_LDFLAGS = $(LIBADD_DL) -Wl,--no-as-needed -pthread -lrt
 # header files
 noinst_HEADERS = \
 	Options.hh \
+	DBService.hh \
 	Server.hh
 
 EXTRA_DIST = env.sh qatar.json
@@ -411,6 +416,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qatar-DBService.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qatar-Main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qatar-Options.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qatar-Server.Po@am__quote@
@@ -449,6 +455,20 @@ qatar-Options.obj: Options.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='Options.cc' object='qatar-Options.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(qatar_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o qatar-Options.obj `if test -f 'Options.cc'; then $(CYGPATH_W) 'Options.cc'; else $(CYGPATH_W) '$(srcdir)/Options.cc'; fi`
+
+qatar-DBService.o: DBService.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(qatar_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT qatar-DBService.o -MD -MP -MF $(DEPDIR)/qatar-DBService.Tpo -c -o qatar-DBService.o `test -f 'DBService.cc' || echo '$(srcdir)/'`DBService.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/qatar-DBService.Tpo $(DEPDIR)/qatar-DBService.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='DBService.cc' object='qatar-DBService.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(qatar_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o qatar-DBService.o `test -f 'DBService.cc' || echo '$(srcdir)/'`DBService.cc
+
+qatar-DBService.obj: DBService.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(qatar_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT qatar-DBService.obj -MD -MP -MF $(DEPDIR)/qatar-DBService.Tpo -c -o qatar-DBService.obj `if test -f 'DBService.cc'; then $(CYGPATH_W) 'DBService.cc'; else $(CYGPATH_W) '$(srcdir)/DBService.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/qatar-DBService.Tpo $(DEPDIR)/qatar-DBService.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='DBService.cc' object='qatar-DBService.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(qatar_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o qatar-DBService.obj `if test -f 'DBService.cc'; then $(CYGPATH_W) 'DBService.cc'; else $(CYGPATH_W) '$(srcdir)/DBService.cc'; fi`
 
 qatar-Server.o: Server.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(qatar_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT qatar-Server.o -MD -MP -MF $(DEPDIR)/qatar-Server.Tpo -c -o qatar-Server.o `test -f 'Server.cc' || echo '$(srcdir)/'`Server.cc

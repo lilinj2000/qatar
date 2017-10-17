@@ -156,6 +156,21 @@ ZOD_LIBADD="$ZOD_HOME/lib/libzod.la"
 AC_SUBST(ZOD_CPPFLAGS)
 AC_SUBST(ZOD_LIBADD)
 
+dnl gtest lib
+GTEST_HOME=$home_3rd/googletest
+AC_ARG_WITH([gtest],
+    [AS_HELP_STRING([--with-gtest],
+        [home path of the gtest, defaults to $GTEST_HOME])],
+    [GTEST_HOME="$withval"],
+    [GTEST_HOME="$GTEST_HOME"])
+AC_SUBST([GTEST_HOME])
+
+GTEST_CPPFLAGS=-I$GTEST_HOME/include
+GTEST_LIBADD="$GTEST_HOME/lib/libgtest.a $GTEST_HOME/lib/libgtest_main.a"
+AC_SUBST(GTEST_CPPFLAGS)
+AC_SUBST(GTEST_LIBADD)
+
 AC_OUTPUT([
 	Makefile
-	src/Makefile])
+	src/Makefile
+	utest/Makefile])
